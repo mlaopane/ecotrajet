@@ -1,3 +1,4 @@
+import type { Geocode } from "@/app/utils/types/openroute"
 import { NextRequest, NextResponse } from "next/server"
 
 type City = {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
 	if (!city) {
 		return NextResponse.json(
 			{ error: "Query parameter 'city' is required" },
-			{ status: 400 }
+			{ status: 400 },
 		)
 	}
 
@@ -35,24 +36,19 @@ export async function GET(req: NextRequest) {
 			throw new Error("Failed to fetch city data")
 		}
 
-		const data = await response.json()
+		const data: Geocode.GetAutocompleteResponse = await response.json()
 
-		const cities: City[] = data.features.map(
-			(feature: {
-				properties: { label: unknown }
-				geometry: { coordinates: unknown }
-			}) => ({
-				name: feature.properties.label,
-				coordinates: feature.geometry.coordinates,
-			})
-		)
+		const cities: City[] = data.features.map((feature) => ({
+			name: feature.properties.label,
+			coordinates: feature.geometry.coordinates,
+		}))
 
 		return NextResponse.json(cities)
 	} catch (error) {
 		console.error("Error:", error)
 		return NextResponse.json(
 			{ error: "Internal server error" },
-			{ status: 500 }
+			{ status: 500 },
 		)
 	}
 }

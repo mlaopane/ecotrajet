@@ -1,13 +1,15 @@
+import type { GetDistanceRequest } from "@/app/utils/types/api/getDistance"
+import type { Directions } from "@/app/utils/types/openroute"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
 	try {
-		const { from, to, mode, distance } = await req.json()
+		const { from, to, mode, distance }: GetDistanceRequest = await req.json()
 
 		if (!from || !to || !mode || !distance) {
 			return NextResponse.json(
 				{ error: "Missing or invalid body parameters" },
-				{ status: 400 }
+				{ status: 400 },
 			)
 		}
 
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
 				body: JSON.stringify(body),
 			})
 
-			const data = await response.json()
+			const data: Directions.PostResponse = await response.json()
 
 			if (response.ok) {
 				return data.routes[0].summary.distance || 0
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
 			//si code erreur 2010, nouvel appel avec un +grd radius et ferries activés
 			if (data.error?.code === 2010) {
 				console.warn(
-					`📍 Point non routable: tentative ${attempt} avec un rayon de ${radius}m`
+					`📍 Point non routable: tentative ${attempt} avec un rayon de ${radius}m`,
 				)
 
 				if (attempt < maxAttempts) {
@@ -63,11 +65,11 @@ export async function POST(req: NextRequest) {
 				} else {
 					console.log(data.error.message)
 					throw new Error(
-						"Unable to find routable points even after maximum attempts."
+						"Unable to find routable points even after maximum attempts.",
 					)
 				}
 			}
-			throw new Error(data.error?.message || "Unknown error occurred")
+			throw new Error(data.error?.message ?? "Unknown error occurred")
 		}
 
 		const calculatedDistance = await fetchRoute()
